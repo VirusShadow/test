@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Andromeda Law Secure Network</title>
+    <style>
+        /* ========================================
+           GLOBAL RESET & BASE STYLES
+        ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        /* ========================================
+           FONT CLASSES - STRICT SEPARATION
+        ======================================== */
+        
+        /* System/Boot/Code text - Times New Roman */
+        .system-text,
+        .boot-log,
+        .system-message,
+        .encryption-text {
+            font-family: "Times New Roman", Times, serif;
+        }
+
+        /* UI/Portal/User text - Georgia */
+        .ui-text {
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        /* ========================================
+           FULLSCREEN INITIALIZATION OVERLAY
+        ======================================== */
+        #init-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            cursor: pointer;
+        }
+
+        #init-overlay h1 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            letter-spacing: 2px;
+        }
+
+        #init-overlay p {
+            font-size: 1rem;
+            color: #aaa;
+            max-width: 500px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        #init-overlay .click-prompt {
+            margin-top: 3rem;
+            font-size: 0.9rem;
+            color: #666;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* ========================================
+           BOOT SEQUENCE SCREEN
+        ======================================== */
+        #boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        #boot-screen.active {
+            display: flex;
+        }
+
+        .boot-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .boot-line {
+            color: #fff;
+            font-size: 0.9rem;
+            margin: 0.3rem 0;
+            opacity: 0;
+            animation: fadeInLine 0.5s forwards;
+        }
+
+        @keyframes fadeInLine {
+            to { opacity: 1; }
+        }
+
+        .boot-progress {
+            margin-top: 3rem;
+            height: 4px;
+            background: #222;
+            border-radius: 2px;
+            overflow: hidden;
+            opacity: 0;
+        }
+
+        .boot-progress.active {
+            animation: fadeInLine 0.5s forwards;
+        }
+
+        .boot-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #fff, #aaa);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        /* ========================================
+           LOGIN SCREEN
+        ======================================== */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9998;
+        }
+
+        #login-screen.active {
+            display: flex;
+        }
+
+        .login-container {
+            width: 400px;
+            padding: 3rem;
+            border: 1px solid #333;
+            background: #0a0a0a;
+        }
+
+        .login-container h1 {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .login-field {
+            margin-bottom: 1.5rem;
+        }
+
+        .login-field label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: #aaa;
+        }
+
+        .login-field input {
+            width: 100%;
+            padding: 0.75rem;
+            background: #000;
+            border: 1px solid #333;
+            color: #fff;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .login-field input:focus {
+            outline: none;
+            border-color: #666;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #fff;
+            color: #000;
+            border: none;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 1rem;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: background 0.3s;
+        }
+
+        .login-button:hover {
+            background: #ddd;
+        }
+
+        .login-error {
+            color: #ff4444;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            text-align: center;
+            display: none;
+        }
+
+        /* ========================================
+           SESSION LOCK OVERLAY
+        ======================================== */
+        #lock-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9997;
+        }
+
+        #lock-overlay.active {
+            display: flex;
+        }
+
+        .lock-message {
+            text-align: center;
+        }
+
+        .lock-message h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            letter-spacing: 2px;
+        }
+
+        .lock-message p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* ========================================
+           DASHBOARD
+        ======================================== */
+        #dashboard {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            z-index: 100;
+        }
+
+        #dashboard.active {
+            display: block;
+        }
+
+        .dashboard-header {
+            padding: 2rem;
+            border-bottom: 1px solid #222;
+        }
+
+        .dashboard-header h1 {
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+        }
+
+        .dashboard-modules {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            padding: 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .module-card {
+            border: 1px solid #333;
+            padding: 3rem 2rem;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transition: left 0.5s;
+        }
+
+        .module-card:hover::before {
+            left: 100%;
+        }
+
+        .module-card:hover {
+            border-color: #fff;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255,255,255,0.1);
+        }
+
+        .module-card h2 {
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+
+        .module-card p {
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* ========================================
+           MODULE PANELS (FULLSCREEN)
+        ======================================== */
+        .module-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            flex-direction: column;
+            z-index: 200;
+        }
+
+        .module-panel.active {
+            display: flex;
+        }
+
+        .module-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .module-header h2 {
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        .module-close {
+            background: none;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 0.5rem 1.5rem;
+            cursor: pointer;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .module-close:hover {
+            border-color: #666;
+            background: #111;
+        }
+
+        .module-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        /* ========================================
+           BOOKMARKS MODULE
+        ======================================== */
+        .bookmark-section {
+            margin-bottom: 3rem;
+        }
+
+        .bookmark-section h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: #aaa;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #222;
+            padding-bottom: 0.5rem;
+        }
+
+        .bookmark-list {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .bookmark-item {
+            padding: 1rem;
+            border: 1px solid #222;
+            background: linear-gradient(135deg, #0a0a0a 0%, #151515 100%);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bookmark-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: #fff;
+            transform: scaleY(0);
+            transition: transform 0.3s;
+        }
+
+        .bookmark-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .bookmark-item:hover {
+            border-color: #666;
+            background: linear-gradient(135deg, #151515 0%, #202020 100%);
+            transform: translateX(5px);
+        }
+
+        .bookmark-title {
+            font-size: 0.95rem;
+        }
+
+        .bookmark-url {
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        /* ========================================
+           SEARCH MODULE - FIXED LAYOUT
+        ======================================== */
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 3rem;
+            background: linear-gradient(135deg, #0a0a0a 0%, #151515 100%);
+            border: 1px solid #222;
+        }
+
+        .search-engine-selectors {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+
+        .search-tab {
+            padding: 0.75rem 2rem;
+            background: transparent !important;
+            border: 1px solid #666;
+            color: #666;
+            cursor: pointer;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .search-tab.active {
+            color: #fff !important;
+            border-color: #fff !important;
+            background: transparent !important;
+        }
+
+        .search-tab:hover:not(.active) {
+            color: #aaa;
+            border-color: #aaa;
+            background: transparent !important;
+        }
+
+        .search-input-row {
+            display: flex;
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .search-box {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: #000;
+            border: 1px solid #333;
+            color: #fff;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #666;
+        }
+
+        .search-box::placeholder {
+            color: #555;
+            letter-spacing: 0.5px;
+        }
+
+        .search-button {
+            padding: 0.75rem 2rem;
+            background: transparent;
+            color: #fff;
+            border: 1px solid #666;
+            cursor: pointer;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            white-space: nowrap;
+            box-sizing: border-box;
+        }
+
+        .search-button:hover {
+            border-color: #fff;
+            box-shadow: 0 0 15px rgba(255,255,255,0.1);
+        }
+
+        /* ========================================
+           IFRAME VIEWER
+        ======================================== */
+        #iframe-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            flex-direction: column;
+            z-index: 300;
+        }
+
+        #iframe-viewer.active {
+            display: flex;
+        }
+
+        .iframe-header {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .iframe-title {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        .iframe-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .iframe-button {
+            background: none;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 0.4rem 1rem;
+            cursor: pointer;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+
+        .iframe-button:hover {
+            border-color: #666;
+            background: #111;
+        }
+
+        .iframe-container {
+            flex: 1;
+            position: relative;
+            background: #111;
+        }
+
+        #content-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .iframe-blocked-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+        }
+
+        .iframe-blocked-message.active {
+            display: block;
+        }
+
+        .iframe-blocked-message p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        /* ========================================
+           CLOUD MODULE (PLACEHOLDER)
+        ======================================== */
+        .cloud-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cloud-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #222;
+            padding: 0;
+        }
+
+        .cloud-tab {
+            padding: 1rem 2rem;
+            background: transparent !important;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: #666;
+            cursor: pointer;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            position: relative;
+            text-transform: uppercase;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .cloud-tab.active {
+            color: #fff !important;
+            border-bottom-color: #fff !important;
+            background: transparent !important;
+        }
+
+        .cloud-tab:hover:not(.active) {
+            color: #aaa;
+            background: transparent !important;
+        }
+
+        .cloud-button {
+            width: 100%;
+            padding: 1.2rem;
+            background: linear-gradient(135deg, #fff 0%, #ddd 100%);
+            color: #000;
+            border: 1px solid #fff;
+            cursor: pointer;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 1rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            box-sizing: border-box;
+        }
+
+        .cloud-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+            z-index: -1;
+        }
+
+        .cloud-button:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        .cloud-button:hover {
+            background: linear-gradient(135deg, #ddd 0%, #bbb 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255,255,255,0.2);
+        }
+
+        .cloud-placeholder {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+
+        .cloud-placeholder h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========================================
+         FULLSCREEN INITIALIZATION OVERLAY
+         User must click to enter fullscreen mode
+    ======================================== -->
+    <div id="init-overlay" class="ui-text">
+        <h1>INITIALIZE SECURE ENVIRONMENT</h1>
+        <p>User confirmation required to enter secure fullscreen mode. This application operates in an isolated environment to ensure maximum data protection.</p>
+        <div class="click-prompt">Click anywhere to proceed</div>
+    </div>
+
+    <!-- ========================================
+         BOOT SEQUENCE SCREEN
+         Terminal-style initialization
+    ======================================== -->
+    <div id="boot-screen" class="system-text">
+        <div class="boot-container">
+            <div id="boot-log"></div>
+            <div class="boot-progress">
+                <div class="boot-progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         LOGIN SCREEN
+    ======================================== -->
+    <div id="login-screen" class="ui-text">
+        <div class="login-container">
+            <h1>ANDROMEDA LAW SECURE NETWORK</h1>
+            <form id="login-form">
+                <div class="login-field">
+                    <label>USERNAME</label>
+                    <input type="text" id="username" autocomplete="off" required>
+                </div>
+                <div class="login-field">
+                    <label>PASSWORD</label>
+                    <input type="password" id="password" autocomplete="off" required>
+                </div>
+                <button type="submit" class="login-button">ACCESS NETWORK</button>
+                <div class="login-error" id="login-error">Invalid credentials. Access denied.</div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================
+         SESSION LOCK OVERLAY
+    ======================================== -->
+    <div id="lock-overlay" class="ui-text">
+        <div class="lock-message">
+            <h2>SESSION LOCKED</h2>
+            <p>Re-authentication required</p>
+        </div>
+    </div>
+
+    <!-- ========================================
+         DASHBOARD
+    ======================================== -->
+    <div id="dashboard" class="ui-text">
+        <div class="dashboard-header">
+            <h1>ANDROMEDA LAW SECURE NETWORK</h1>
+        </div>
+        <div class="dashboard-modules">
+            <div class="module-card" data-module="cloud">
+                <h2>CLOUD</h2>
+                <p>Secure document storage</p>
+            </div>
+            <div class="module-card" data-module="searches">
+                <h2>SEARCHES</h2>
+                <p>Research and inquiry</p>
+            </div>
+            <div class="module-card" data-module="bookmarks">
+                <h2>BOOKMARKS</h2>
+                <p>Resource library</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         CLOUD MODULE PANEL
+    ======================================== -->
+    <div id="cloud-panel" class="module-panel ui-text">
+        <div class="module-header">
+            <h2>CLOUD STORAGE</h2>
+            <button class="module-close">CLOSE</button>
+        </div>
+        <div class="module-content">
+            <div class="cloud-container">
+                <div class="cloud-tabs">
+                    <button class="cloud-tab active" data-cloud="gdrive">Google Drive</button>
+                    <button class="cloud-tab" data-cloud="icloud">iCloud Drive</button>
+                </div>
+                <button class="cloud-button" id="cloud-button">ACCESS CLOUD STORAGE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         SEARCHES MODULE PANEL - FIXED LAYOUT
+         Engine selectors above, input + button in single row
+    ======================================== -->
+    <div id="searches-panel" class="module-panel ui-text">
+        <div class="module-header">
+            <h2>RESEARCH PORTAL</h2>
+            <button class="module-close">CLOSE</button>
+        </div>
+        <div class="module-content">
+            <div class="search-container">
+                <div class="search-engine-selectors">
+                    <button class="search-tab active" data-engine="google">Google</button>
+                    <button class="search-tab" data-engine="chatgpt">ChatGPT</button>
+                </div>
+                <div class="search-input-row">
+                    <input type="text" class="search-box" id="search-input" placeholder="Enter search query...">
+                    <button class="search-button" id="search-button">Execute</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         BOOKMARKS MODULE PANEL
+    ======================================== -->
+    <div id="bookmarks-panel" class="module-panel ui-text">
+        <div class="module-header">
+            <h2>RESOURCE LIBRARY</h2>
+            <button class="module-close">CLOSE</button>
+        </div>
+        <div class="module-content" id="bookmarks-content">
+            <!-- Bookmarks will be generated here -->
+        </div>
+    </div>
+
+    <!-- ========================================
+         IFRAME VIEWER
+         For embedded website viewing
+    ======================================== -->
+    <div id="iframe-viewer" class="ui-text">
+        <div class="iframe-header">
+            <div class="iframe-title" id="iframe-title">Loading...</div>
+            <div class="iframe-controls">
+                <button class="iframe-button" id="iframe-external">OPEN EXTERNALLY</button>
+                <button class="iframe-button" id="iframe-close">CLOSE</button>
+            </div>
+        </div>
+        <div class="iframe-container">
+            <iframe id="content-iframe"></iframe>
+            <div class="iframe-blocked-message system-text" id="iframe-blocked">
+                <p>External site requires secure isolation.</p>
+                <p>Opening in external browser...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // CONFIGURATION
+        // ========================================
+        const CONFIG = {
+            credentials: {
+                username: 'Hugo.trono299@gmail.com',
+                password: '!Andromeda2029?'
+            },
+            lockTimeout: 60000, // 60 seconds
+            bootLines: [
+                'Initializing Andromeda Secure Network...',
+                'Loading secure kernel modules...',
+                'Verifying access layers...',
+                'Mounting encrypted file systems...',
+                'Establishing secure communication channels...',
+                'Running system diagnostics...',
+                'Initializing cryptographic protocols...',
+                'Encryption handshake complete.',
+                'System ready. Awaiting authentication.'
+            ],
+            bookmarks: {
+                'Roblox': [
+                    { title: 'Roblox Home', url: 'https://www.roblox.com/home' },
+                    { title: 'Avatar', url: 'https://www.roblox.com/my/avatar' }
+                ],
+                'VRS YouTube': [
+                    { title: 'VRS Channel', url: 'https://www.youtube.com/channel/UCpv5hkq4aAr2s2prmR4pUuQ' },
+                    { title: 'Twitch', url: 'https://www.twitch.tv/' }
+                ],
+                'VRS Media': [
+                    { title: 'Facebook', url: 'https://www.facebook.com/' },
+                    { title: 'TikTok', url: 'https://www.tiktok.com/trending/?lang=en' },
+                    { title: 'Spotify', url: 'https://www.spotify.com/' },
+                    { title: 'Twitter', url: 'https://twitter.com/home' },
+                    { title: 'VRS Gmail', url: 'https://mail.google.com/mail/u/0/#inbox' },
+                    { title: 'Discord', url: 'https://discord.com/channels/@me' },
+                    { title: 'Stan', url: 'https://play.stan.com.au/' },
+                    { title: 'Netflix', url: 'https://www.netflix.com/browse' },
+                    { title: 'VirusTotal', url: 'https://www.virustotal.com/gui/home/upload' },
+                    { title: 'Fakecrime', url: 'https://fakecrime.bio/login?redirect=%2Fprofile' }
+                ],
+                'Star Citizen': [
+                    { title: 'DPS Calculator', url: 'https://www.erkul.games/live/calculator' },
+                    { title: 'Roberts Space Industries', url: 'https://robertsspaceindustries.com/' },
+                    { title: 'CStone Item Finder', url: 'https://finder.cstone.space/' }
+                ],
+                'Rust': [
+                    { title: 'Tradeit.gg', url: 'https://tradeit.gg/my-inventory' }
+                ],
+                'R6': [
+                    { title: 'Rainbow Six Marketplace', url: 'https://www.ubisoft.com/en-us/game/rainbow-six/siege/marketplace' }
+                ],
+                'Minecraft': [
+                    { title: 'Block IDs', url: 'https://edusupport.minecraft.net/hc/en-us/community/posts/360072467772-item-block-id-for-reference' }
+                ],
+                'MIDI': [
+                    { title: 'MIDI Converter', url: 'https://www.freeconvert.com/midi-converter' },
+                    { title: 'YT-MP3', url: 'https://y2mate.nu/O3GB/' }
+                ],
+                'ERLC': [
+                    { title: 'Vehicle Templates', url: 'https://drive.google.com/drive/folders/1HJzxis5PKYLnHhJUG7ZaueBfgSlQAFGX' },
+                    { title: 'Creator Dashboard', url: 'https://create.roblox.com/dashboard/creations?activeTab=Decal' },
+                    { title: 'Photopea', url: 'https://www.photopea.com/' }
+                ],
+                'School': [
+                    { title: 'Sentral Portal', url: 'https://cessnockhs.sentral.com.au/auth/portal' },
+                    { title: 'Canvas', url: 'https://cessnock.instructure.com/#' },
+                    { title: 'Canva', url: 'https://www.canva.com/' },
+                    { title: 'Power Apps', url: 'https://apps.powerapps.com/play/e/default-05a0e69a-418a-47c1-9c25-9387261bf991/a/aa9f09e2-034d-4238-93ab-907c5e1c04f5?tenantId=05a0e69a-418a-47c1-9c25-9387261bf991' },
+                    { title: 'Google Docs', url: 'https://docs.google.com/document/u/0/?ec=asw-docs-hero-goto' },
+                    { title: 'Google Drive', url: 'https://drive.google.com/drive/my-drive' },
+                    { title: 'Grok Academy', url: 'https://groklearning.com/login/' },
+                    { title: 'MathGPT', url: 'https://math-gpt.org/' },
+                    { title: 'Stile', url: 'https://stileapp.com/au/institutions/9195/subjects/512472' }
+                ]
+            }
+        };
+
+        // ========================================
+        // STATE MANAGEMENT
+        // ========================================
+        const state = {
+            authenticated: false,
+            currentModule: null,
+            currentUrl: null,
+            inactivityTimer: null,
+            searchEngine: 'google', // default search engine
+            cloudService: 'gdrive' // default cloud service
+        };
+
+        // ========================================
+        // FULLSCREEN INITIALIZATION
+        // Requires user click to enter fullscreen
+        // ========================================
+        const initOverlay = document.getElementById('init-overlay');
+        
+        initOverlay.addEventListener('click', async () => {
+            try {
+                // Request fullscreen mode
+                await document.documentElement.requestFullscreen();
+                
+                // Hide initialization overlay
+                initOverlay.style.display = 'none';
+                
+                // Start boot sequence
+                startBootSequence();
+            } catch (err) {
+                console.warn('Fullscreen request denied or not supported:', err);
+                // Continue anyway without fullscreen
+                initOverlay.style.display = 'none';
+                startBootSequence();
+            }
+        });
+
+        // ========================================
+        // BOOT SEQUENCE
+        // Terminal-style system initialization
+        // ========================================
+        function startBootSequence() {
+            const bootScreen = document.getElementById('boot-screen');
+            const bootLog = document.getElementById('boot-log');
+            const progressBar = document.querySelector('.boot-progress-bar');
+            const progressContainer = document.querySelector('.boot-progress');
+            
+            bootScreen.classList.add('active');
+            
+            // Disable interaction during boot
+            document.body.style.pointerEvents = 'none';
+            
+            let lineIndex = 0;
+            const lineInterval = setInterval(() => {
+                if (lineIndex < CONFIG.bootLines.length) {
+                    const line = document.createElement('div');
+                    line.className = 'boot-line boot-log';
+                    line.textContent = '> ' + CONFIG.bootLines[lineIndex];
+                    bootLog.appendChild(line);
+                    lineIndex++;
+                    
+                    // Show progress bar after half the lines
+                    if (lineIndex === Math.floor(CONFIG.bootLines.length / 2)) {
+                        progressContainer.classList.add('active');
+                        animateProgress();
+                    }
+                } else {
+                    clearInterval(lineInterval);
+                    
+                    // Complete boot sequence
+                    setTimeout(() => {
+                        bootScreen.classList.remove('active');
+                        showLogin();
+                        document.body.style.pointerEvents = 'auto';
+                    }, 1000);
+                }
+            }, 400);
+            
+            function animateProgress() {
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(progressInterval);
+                    }
+                    progressBar.style.width = progress + '%';
+                }, 200);
+            }
+        }
+
+        // ========================================
+        // LOGIN SYSTEM
+        // Simple credential validation
+        // ========================================
+        function showLogin() {
+            document.getElementById('login-screen').classList.add('active');
+        }
+
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('login-error');
+            
+            if (username === CONFIG.credentials.username && 
+                password === CONFIG.credentials.password) {
+                
+                state.authenticated = true;
+                errorMsg.style.display = 'none';
+                
+                document.getElementById('login-screen').classList.remove('active');
+                showDashboard();
+                startInactivityTimer();
+            } else {
+                errorMsg.style.display = 'block';
+            }
+        });
+
+        // ========================================
+        // INACTIVITY LOCK
+        // Auto-lock after 60 seconds of no input
+        // ========================================
+        function startInactivityTimer() {
+            resetInactivityTimer();
+            
+            // Reset timer on any interaction
+            ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+                document.addEventListener(event, resetInactivityTimer);
+            });
+        }
+
+        function resetInactivityTimer() {
+            if (state.inactivityTimer) {
+                clearTimeout(state.inactivityTimer);
+            }
+            
+            if (state.authenticated) {
+                state.inactivityTimer = setTimeout(lockSession, CONFIG.lockTimeout);
+            }
+        }
+
+        function lockSession() {
+            state.authenticated = false;
+            
+            // Hide all panels
+            document.getElementById('dashboard').classList.remove('active');
+            document.querySelectorAll('.module-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById('iframe-viewer').classList.remove('active');
+            
+            // Show lock screen
+            document.getElementById('lock-overlay').classList.add('active');
+            
+            // After 2 seconds, show login
+            setTimeout(() => {
+                document.getElementById('lock-overlay').classList.remove('active');
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                showLogin();
+            }, 2000);
+        }
+
+        // ========================================
+        // DASHBOARD
+        // Main module selection screen
+        // ========================================
+        function showDashboard() {
+            document.getElementById('dashboard').classList.add('active');
+        }
+
+        // Module card click handlers
+        document.querySelectorAll('.module-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const module = card.dataset.module;
+                openModule(module);
+            });
+        });
+
+        function openModule(moduleName) {
+            state.currentModule = moduleName;
+            
+            // Hide dashboard
+            document.getElementById('dashboard').classList.remove('active');
+            
+            // Show corresponding panel
+            const panelId = moduleName + '-panel';
+            document.getElementById(panelId).classList.add('active');
+            
+            // Special initialization for bookmarks
+            if (moduleName === 'bookmarks') {
+                renderBookmarks();
+            }
+        }
+
+        // Close button handlers for all modules
+        document.querySelectorAll('.module-close').forEach(btn => {
+            btn.addEventListener('click', () => {
+                closeCurrentModule();
+            });
+        });
+
+        function closeCurrentModule() {
+            document.querySelectorAll('.module-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            showDashboard();
+        }
+
+        // ========================================
+        // BOOKMARKS MODULE
+        // Display categorized bookmarks
+        // ========================================
+        function renderBookmarks() {
+            const container = document.getElementById('bookmarks-content');
+            container.innerHTML = '';
+            
+            for (const [category, links] of Object.entries(CONFIG.bookmarks)) {
+                const section = document.createElement('div');
+                section.className = 'bookmark-section';
+                
+                const heading = document.createElement('h3');
+                heading.textContent = category;
+                section.appendChild(heading);
+                
+                const list = document.createElement('div');
+                list.className = 'bookmark-list';
+                
+                links.forEach(link => {
+                    const item = document.createElement('div');
+                    item.className = 'bookmark-item';
+                    item.innerHTML = `
+                        <div>
+                            <div class="bookmark-title">${link.title}</div>
+                            <div class="bookmark-url">${link.url}</div>
+                        </div>
+                    `;
+                    item.addEventListener('click', () => openUrl(link.url, link.title));
+                    list.appendChild(item);
+                });
+                
+                section.appendChild(list);
+                container.appendChild(section);
+            }
+        }
+
+        // ========================================
+        // SEARCH MODULE
+        // Execute web searches with engine selection
+        // ========================================
+        
+        // Search tab switching
+        document.querySelectorAll('.search-tab:not(.cloud-tab)').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.search-tab:not(.cloud-tab)').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                state.searchEngine = tab.dataset.engine;
+            });
+        });
+        
+        document.getElementById('search-button').addEventListener('click', () => {
+            const query = document.getElementById('search-input').value.trim();
+            if (query) {
+                let searchUrl;
+                if (state.searchEngine === 'chatgpt') {
+                    searchUrl = 'https://chatgpt.com/?q=' + encodeURIComponent(query);
+                } else {
+                    searchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(query);
+                }
+                openUrl(searchUrl, state.searchEngine.toUpperCase() + ' Search: ' + query);
+            }
+        });
+
+        document.getElementById('search-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('search-button').click();
+            }
+        });
+
+        // ========================================
+        // CLOUD MODULE
+        // Access Google Drive and iCloud Drive
+        // ========================================
+        
+        // Cloud tab switching
+        document.querySelectorAll('.cloud-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.cloud-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                state.cloudService = tab.dataset.cloud;
+            });
+        });
+        
+        document.getElementById('cloud-button').addEventListener('click', () => {
+            let cloudUrl;
+            let cloudTitle;
+            
+            if (state.cloudService === 'icloud') {
+                cloudUrl = 'https://www.icloud.com/iclouddrive/';
+                cloudTitle = 'iCloud Drive';
+            } else {
+                cloudUrl = 'https://drive.google.com/drive/my-drive';
+                cloudTitle = 'Google Drive';
+            }
+            
+            openUrl(cloudUrl, cloudTitle);
+        });
+
+        // ========================================
+        // IFRAME VIEWER
+        // Attempt to embed sites, fallback to external
+        // ========================================
+        function openUrl(url, title) {
+            state.currentUrl = url;
+            
+            // Hide current module
+            document.querySelectorAll('.module-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // Show iframe viewer
+            const viewer = document.getElementById('iframe-viewer');
+            const iframe = document.getElementById('content-iframe');
+            const titleEl = document.getElementById('iframe-title');
+            const blockedMsg = document.getElementById('iframe-blocked');
+            
+            viewer.classList.add('active');
+            titleEl.textContent = title;
+            blockedMsg.classList.remove('active');
+            
+            // Attempt to load in iframe
+            iframe.src = url;
+            
+            // Detect if iframe is blocked (timeout method)
+            let iframeLoaded = false;
+            
+            iframe.onload = () => {
+                iframeLoaded = true;
+            };
+            
+            iframe.onerror = () => {
+                handleBlockedIframe();
+            };
+            
+            // Timeout fallback
+            setTimeout(() => {
+                if (!iframeLoaded) {
+                    handleBlockedIframe();
+                }
+            }, 3000);
+        }
+
+        function handleBlockedIframe() {
+            const iframe = document.getElementById('content-iframe');
+            const blockedMsg = document.getElementById('iframe-blocked');
+            
+            // Show blocked message
+            blockedMsg.classList.add('active');
+            iframe.style.display = 'none';
+            
+            // Open in external tab
+            setTimeout(() => {
+                window.open(state.currentUrl, '_blank');
+            }, 1500);
+        }
+
+        // Iframe control buttons
+        document.getElementById('iframe-external').addEventListener('click', () => {
+            window.open(state.currentUrl, '_blank');
+        });
+
+        document.getElementById('iframe-close').addEventListener('click', () => {
+            const iframe = document.getElementById('content-iframe');
+            const viewer = document.getElementById('iframe-viewer');
+            const blockedMsg = document.getElementById('iframe-blocked');
+            
+            viewer.classList.remove('active');
+            iframe.src = '';
+            iframe.style.display = 'block';
+            blockedMsg.classList.remove('active');
+            
+            // Return to previous module or dashboard
+            if (state.currentModule) {
+                document.getElementById(state.currentModule + '-panel').classList.add('active');
+            } else {
+                showDashboard();
+            }
+        });
+
+        // ========================================
+        // SELF-CHECK ON LOAD
+        // Verify critical functionality
+        // ========================================
+        window.addEventListener('load', () => {
+            console.log('=== ANDROMEDA LAW SECURE NETWORK ===');
+            console.log('Self-check initiated...');
+            
+            // Check font separation
+            const systemEl = document.querySelector('.system-text');
+            const uiEl = document.querySelector('.ui-text');
+            const systemFont = window.getComputedStyle(systemEl).fontFamily;
+            const uiFont = window.getComputedStyle(uiEl).fontFamily;
+            
+            console.log('System font:', systemFont);
+            console.log('UI font:', uiFont);
+            console.log('Fonts separated:', systemFont !== uiFont);
+            
+            // Check boot line color
+            const bootLine = document.querySelector('.boot-line');
+            if (bootLine) {
+                const color = window.getComputedStyle(bootLine).color;
+                console.log('Boot text color:', color);
+            }
+            
+            // Verify elements exist
+            console.log('Init overlay exists:', !!document.getElementById('init-overlay'));
+            console.log('Boot screen exists:', !!document.getElementById('boot-screen'));
+            console.log('Login screen exists:', !!document.getElementById('login-screen'));
+            console.log('Dashboard exists:', !!document.getElementById('dashboard'));
+            console.log('Iframe viewer exists:', !!document.getElementById('iframe-viewer'));
+            
+            console.log('Self-check complete. System ready.');
+        });
+    </script>
+</body>
+</html>
